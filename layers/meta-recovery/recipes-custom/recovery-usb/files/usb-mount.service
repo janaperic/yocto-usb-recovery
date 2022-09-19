@@ -1,0 +1,7 @@
+[Unit]
+Description=Mount USB Drive
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/sh /usr/bin/recover

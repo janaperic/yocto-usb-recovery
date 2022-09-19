@@ -1,0 +1,2 @@
+KERNEL=="sd[a-z][0-9]", SUBSYSTEMS=="usb", ACTION=="add", ENV{ID_FS_LABEL}=="RECOVERY", RUN+="/bin/systemctl start usb-mount.service"
+KERNEL=="sd[a-z][0-9]", SUBSYSTEMS=="usb", ACTION=="remove", ENV{ID_FS_LABEL}=="RECOVERY", RUN+="/bin/systemctl stop usb-mount.service"

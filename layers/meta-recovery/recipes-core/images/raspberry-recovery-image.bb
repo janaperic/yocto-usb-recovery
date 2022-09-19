@@ -12,5 +12,5 @@ IMAGE_INSTALL += " \
     kernel-modules \
     sudo \
     avahi-daemon \
-    usbutils \
+    jq \
 "

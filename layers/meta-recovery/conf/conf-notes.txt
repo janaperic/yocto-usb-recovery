@@ -1,0 +1,7 @@
+### Shell environment set up for builds. ###
+
+You can now run 'bitbake <target>'
+
+Possible targets are: 
+    1. raspberry-recovery-image
+That's it. 
