@@ -40,9 +40,17 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
         if [ -f "$(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)" ]; then
                 echo "Update available. Updating..."
 
-                #Do the actual update
+                #Do the actual update and chech if it was successful
                 mender install $(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)
+                if [ ! $(echo $?) -eq 0 ]; then
+                        echo "Update failed. Aborting."
+	                exit 0;
+                fi
                 mender commit
+                if [ ! $(echo $?) -eq 0 ]; then
+                        echo "Commiting update failed. Aborting."
+	                exit 0;
+                fi
                 echo "Update done."
 
                 # Disable update on next boot
@@ -57,12 +65,12 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 fi
                 echo "Reversed active and passive partitions"
 
-                # Reboot, if required
+                # Reboot, if required 
                 if [ $(jq -r .autoReboot /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
                         echo "Rebooting..."
                         reboot
                 else
-                        echo "Please reboot for chagnes to take place."
+                        echo "Please reboot for changes to take place."
                 fi
         else
                 echo "Update file not found."
