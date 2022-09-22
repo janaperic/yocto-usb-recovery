@@ -11,13 +11,18 @@ locate_usb=$(blkid | grep RECOVERY)
 locate_usb=${locate_usb%%\:*}
 echo "Recovery USB detected at $locate_usb location."
 
-# Mount the drive at /media/RECOVERY
+# Mount the drive at /media/RECOVERY with read-write persmissions
 if [ ! -d "/media/RECOVERY" ]; then
         echo "Creating /media/RECOVERY dir"
         mkdir /media/RECOVERY
 fi
-mount $locate_usb /media/RECOVERY
-echo "Recovery USB mounted at /media/RECOVERY."
+mount -o rw $locate_usb /media/RECOVERY
+if [ ! $(echo $?) -eq 0 ]; then
+        echo "USB not mounted properly. Aborting."
+	exit 0;
+else
+        echo "Recovery USB mounted at /media/RECOVERY."
+fi
 
 # Check if recovery-settings.json is present
 if [ ! -f "/media/RECOVERY/system/recovery-settings.json" ]; then
@@ -40,7 +45,7 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
         if [ -f "$(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)" ]; then
                 echo "Update available. Updating..."
 
-                #Do the actual update and chech if it was successful
+                #Do the actual update and check if it was successful
                 mender install $(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Update failed. Aborting."
@@ -68,6 +73,7 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 # Reboot, if required 
                 if [ $(jq -r .autoReboot /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
                         echo "Rebooting..."
+                        umount /media/RECOVERY
                         reboot
                 else
                         echo "Please reboot for changes to take place."
@@ -79,4 +85,6 @@ else
         echo "Update unnecessary."
 fi
 
+umount /media/RECOVERY
 echo "End of recovery."
+exit 0
