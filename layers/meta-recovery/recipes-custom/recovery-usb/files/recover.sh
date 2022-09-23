@@ -3,6 +3,7 @@
 # Check if USB drive labeled "RECOVERY" is present
 if [[ ! $(blkid | grep RECOVERY | wc -c) -ne 0 ]]; then
         echo "Recovery USB not detected."
+        umount /media/RECOVERY
         exit 0;
 fi
 
@@ -19,6 +20,7 @@ fi
 mount -o rw $locate_usb /media/RECOVERY
 if [ ! $(echo $?) -eq 0 ]; then
         echo "USB not mounted properly. Aborting."
+        umount /media/RECOVERY
 	exit 0;
 else
         echo "Recovery USB mounted at /media/RECOVERY."
@@ -27,6 +29,7 @@ fi
 # Check if recovery-settings.json is present
 if [ ! -f "/media/RECOVERY/system/recovery-settings.json" ]; then
         echo "recovery-setting.json not found. Aborting."
+        umount /media/RECOVERY
 	exit 0;
 fi
 
@@ -49,11 +52,13 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 mender install $(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Update failed. Aborting."
+                        umount /media/RECOVERY
 	                exit 0;
                 fi
                 mender commit
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Commiting update failed. Aborting."
+                        umount /media/RECOVERY
 	                exit 0;
                 fi
                 echo "Update done."
@@ -85,6 +90,7 @@ else
         echo "Update unnecessary."
 fi
 
-umount /media/RECOVERY
+
 echo "End of recovery."
+umount /media/RECOVERY
 exit 0
