@@ -1,10 +1,15 @@
 #!/bin/sh
 
+exit_function () {
+        cp /var/log/usb-mount.log /media/RECOVERY/system/
+        umount /media/RECOVERY
+        exit 0
+}
+
 # Check if USB drive labeled "RECOVERY" is present
 if [[ ! $(blkid | grep RECOVERY | wc -c) -ne 0 ]]; then
         echo "Recovery USB not detected."
-        umount /media/RECOVERY
-        exit 0;
+        exit_function
 fi
 
 # Find the location of the drive
@@ -17,11 +22,12 @@ if [ ! -d "/media/RECOVERY" ]; then
         echo "Creating /media/RECOVERY dir"
         mkdir /media/RECOVERY
 fi
+
 mount -o rw $locate_usb /media/RECOVERY
+
 if [ ! $(echo $?) -eq 0 ]; then
         echo "USB not mounted properly. Aborting."
-        umount /media/RECOVERY
-	exit 0;
+        exit_function
 else
         echo "Recovery USB mounted at /media/RECOVERY."
 fi
@@ -29,8 +35,7 @@ fi
 # Check if recovery-settings.json is present
 if [ ! -f "/media/RECOVERY/system/recovery-settings.json" ]; then
         echo "recovery-setting.json not found. Aborting."
-        umount /media/RECOVERY
-	exit 0;
+        exit_function
 fi
 
 # Parse the recovery-settings.json
@@ -52,14 +57,12 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 mender install $(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Update failed. Aborting."
-                        umount /media/RECOVERY
-	                exit 0;
+                        exit_function
                 fi
                 mender commit
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Commiting update failed. Aborting."
-                        umount /media/RECOVERY
-	                exit 0;
+                        exit_function
                 fi
                 echo "Update done."
 
@@ -78,6 +81,7 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 # Reboot, if required 
                 if [ $(jq -r .autoReboot /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
                         echo "Rebooting..."
+                        cp /var/log/usb-mount.log /media/RECOVERY/system/
                         umount /media/RECOVERY
                         reboot
                 else
@@ -92,5 +96,4 @@ fi
 
 
 echo "End of recovery."
-umount /media/RECOVERY
-exit 0
+exit_function

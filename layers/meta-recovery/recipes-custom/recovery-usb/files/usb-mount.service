@@ -5,3 +5,10 @@ Description=Mount USB Drive
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/bin/sh /usr/bin/recover
+
+StandardOutput=append:/var/log/usb-mount.log
+StandardError=append:/var/log/usb-mount.log
+
+[Install]
+WantedBy=multi-user.target
+~
