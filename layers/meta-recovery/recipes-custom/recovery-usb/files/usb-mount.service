@@ -11,4 +11,3 @@ StandardError=append:/var/log/usb-mount.log
 
 [Install]
 WantedBy=multi-user.target
-~
