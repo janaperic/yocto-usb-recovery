@@ -75,14 +75,6 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 fi
                 echo "Update done."
 
-                # Change active and passive partitions 
-                if [ $(cat /boot/efi/cmdline.txt | grep -c "root=/dev/mmcblk0p3") -eq 1 ]; then
-                        sed -i "s/mmcblk0p3/mmcblk0p2/g" /boot/efi/cmdline.txt
-                elif [ $(cat /boot/efi/cmdline.txt | grep -c "root=/dev/mmcblk0p2") -eq 1 ]; then
-                        sed -i "s/mmcblk0p2/mmcblk0p3/g" /boot/efi/cmdline.txt
-                fi
-                echo "Reversed active and passive partitions"
-
                 # Reboot, if required 
                 if [ $(jq -r .autoReboot /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
                         echo "Rebooting..."
