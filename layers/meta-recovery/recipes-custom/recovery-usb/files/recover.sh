@@ -12,7 +12,7 @@ exit_function () {
 # Check if USB drive labeled "RECOVERY" is present
 if [[ ! $(blkid | grep RECOVERY | wc -c) -ne 0 ]]; then
         echo "Recovery USB not detected."
-        exit_function
+        exit 0
 fi
 
 # Find the location of the drive
@@ -30,7 +30,7 @@ mount -o rw $locate_usb /media/RECOVERY
 
 if [ ! $(echo $?) -eq 0 ]; then
         echo "USB not mounted properly. Aborting."
-        exit_function
+        exit 0
 else
         echo "Recovery USB mounted at /media/RECOVERY."
 fi
