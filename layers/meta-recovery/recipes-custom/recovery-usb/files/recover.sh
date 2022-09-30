@@ -1,10 +1,11 @@
 #!/bin/sh
 
 exit_function () {
-        # Disable all operations on next boot
-        sed -i 's/yes/no/g' /media/RECOVERY/system/recovery-settings.json
-        # Copy script logs
-        cp /var/log/usb-mount.log /media/RECOVERY/system/
+        # Disable all operations on next boot and copy the output
+        if [[ $(grep -w recovery-settings.json -e "yes") ]]; then
+                cp /var/log/usb-mount.log /media/RECOVERY/system/
+                sed -i 's/yes/no/g' /media/RECOVERY/system/recovery-settings.json
+        fi
         umount /media/RECOVERY
         exit 0
 }
