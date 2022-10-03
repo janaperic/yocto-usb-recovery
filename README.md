@@ -19,7 +19,7 @@ Implemented operations are: <br />
 "updateFile" - path to the update file (Mender artifact) (path) <br />
 "autoReboot" - decides wether system should be automatically rebooted after update (yes/no) <br />
 "disableSSH" - Disables dropbear SSH (yes/no) <br />
-"enaableSSH" - Enables dropbear SSH (yes/no) <br />
+"enableSSH" - Enables dropbear SSH (yes/no) <br />
 
 
 Example of recovery-settings.json
