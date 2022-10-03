@@ -18,6 +18,8 @@ Implemented operations are: <br />
 "performUpdate" - decides wether updated should be performed (yes/no) <br />
 "updateFile" - path to the update file (Mender artifact) (path) <br />
 "autoReboot" - decides wether system should be automatically rebooted after update (yes/no) <br />
+"disableSSH" - Disables dropbear SSH (yes/no) <br />
+"enaableSSH" - Enables dropbear SSH (yes/no) <br />
 
 
 Example of recovery-settings.json
@@ -27,7 +29,9 @@ Example of recovery-settings.json
   "listServices": "yes",
   "performUpdate": "yes",
   "updateFile": "/media/RECOVERY/system/update.mender",
-  "autoReboot": "yes"
+  "autoReboot": "yes",
+  "disableSSH": "no",
+  "enableSSH": "no"
 }
 ```
 
