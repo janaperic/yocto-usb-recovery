@@ -2,7 +2,7 @@
 
 exit_function () {
         # Disable all operations on next boot and copy the output
-        if [[ $(grep -w recovery-settings.json -e "yes") ]]; then
+        if [[ "$(grep -w /media/RECOVERY/system/recovery-settings.json -e "yes")" ]]; then
                 cp /var/log/usb-mount.log /media/RECOVERY/system/
                 sed -i 's/yes/no/g' /media/RECOVERY/system/recovery-settings.json
         fi
@@ -51,6 +51,20 @@ fi
 if [ $(jq -r .listServices /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
 	systemctl --type=service > /media/RECOVERY/system/services
         echo "Listed systemd services at /media/RECOVERY/system/services"
+fi
+
+if [ $(jq -r .disableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+        echo "DROPBEAR_EXTRA_ARGS=" -w -g"" > /etc/default/dropbear
+        echo "Disabled SSH access."
+        if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+                echo "Both disableSSH and enableSSH have been set to yes. Please use only one."
+                exit_function
+        fi
+fi
+
+if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+        echo "DROPBEAR_EXTRA_ARGS=" -B"" > /etc/default/dropbear
+        echo "Enabled SSH access."
 fi
 
 if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
