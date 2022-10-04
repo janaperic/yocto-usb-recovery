@@ -53,16 +53,10 @@ if [ $(jq -r .listServices /media/RECOVERY/system/recovery-settings.json) = "yes
         echo "Listed systemd services at /media/RECOVERY/system/services"
 fi
 
-if [ $(jq -r .disableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "false" ]; then
         echo "DROPBEAR_EXTRA_ARGS=" -w -g"" > /etc/default/dropbear
         echo "Disabled SSH access."
-        if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
-                echo "Both disableSSH and enableSSH have been set to yes. Please use only one."
-                exit_function
-        fi
-fi
-
-if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+elif [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "true" ]; then
         echo "DROPBEAR_EXTRA_ARGS=" -B"" > /etc/default/dropbear
         echo "Enabled SSH access."
 fi
