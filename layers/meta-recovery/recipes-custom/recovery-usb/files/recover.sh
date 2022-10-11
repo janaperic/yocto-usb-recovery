@@ -1,15 +1,5 @@
 #!/bin/sh
 
-exit_function () {
-        # Disable all operations on next boot and copy the output
-        if [[ "$(grep -w /media/RECOVERY/system/recovery-settings.json -e "yes")" ]]; then
-                cp /var/log/usb-mount.log /media/RECOVERY/system/
-                sed -i 's/yes/no/g' /media/RECOVERY/system/recovery-settings.json
-        fi
-        umount /media/RECOVERY
-        exit 0
-}
-
 # Check if USB drive labeled "RECOVERY" is present
 if [[ ! $(blkid | grep RECOVERY | wc -c) -ne 0 ]]; then
         echo "Recovery USB not detected."
@@ -36,11 +26,29 @@ else
         echo "Recovery USB mounted at /media/RECOVERY."
 fi
 
-# Check if recovery-settings.json is present
-if [ ! -f "/media/RECOVERY/system/recovery-settings.json" ]; then
-        echo "recovery-setting.json not found. Aborting."
-        exit_function
+if [ -f "/media/RECOVERY/system/recovery-settings.json" ]; then
+        echo "Please remove recovery-settings.json file and use recovery-setting.json.signed instead." >> /media/RECOVERY/system/usb-mount.log
+        umount /media/RECOVERY
+        exit 0
+fi 
+
+# Check if recovery-settings.json.signed is present
+if [ ! -f "/media/RECOVERY/system/recovery-settings.json.signed" ]; then
+        echo "recovery-setting.json.signed not found. Aborting."
+        cp /var/log/usb-mount.log /media/RECOVERY/system/
+        umount /media/RECOVERY
+        exit 0
 fi
+
+# Decrypt recovery-settings.json.signed
+openssl rsautl -verify -inkey /opt/keys/recovery-key.txt -in /media/RECOVERY/system/recovery-settings.json.signed -pubin > /media/RECOVERY/system/recovery-settings.json
+if [ ! $(echo $?) -eq 0 ]; then
+        echo "Decrypting file failed. Aborting."
+        cp /var/log/usb-mount.log /media/RECOVERY/system/
+        umount /media/RECOVERY
+        exit 0
+fi
+echo "Decryption successful."
 
 # Parse the recovery-settings.json
 if [ $(jq -r .getLogs /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
@@ -53,16 +61,10 @@ if [ $(jq -r .listServices /media/RECOVERY/system/recovery-settings.json) = "yes
         echo "Listed systemd services at /media/RECOVERY/system/services"
 fi
 
-if [ $(jq -r .disableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "false" ]; then
         echo "DROPBEAR_EXTRA_ARGS=" -w -g"" > /etc/default/dropbear
         echo "Disabled SSH access."
-        if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
-                echo "Both disableSSH and enableSSH have been set to yes. Please use only one."
-                exit_function
-        fi
-fi
-
-if [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
+elif [ $(jq -r .enableSSH /media/RECOVERY/system/recovery-settings.json) = "true" ]; then
         echo "DROPBEAR_EXTRA_ARGS=" -B"" > /etc/default/dropbear
         echo "Enabled SSH access."
 fi
@@ -74,19 +76,25 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 # Check if update file is empty
                 if [ ! -s "$(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)" ]; then
                         echo "Update file empty. Aborting."
-                        exit_function
+                        cp /var/log/usb-mount.log /media/RECOVERY/system/
+                        umount /media/RECOVERY
+                        exit 0
                 fi
 
                 # Do the actual update and check if it was successful
                 mender install $(jq -r .updateFile /media/RECOVERY/system/recovery-settings.json)
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Update failed. Aborting."
-                        exit_function
+                        cp /var/log/usb-mount.log /media/RECOVERY/system/
+                        umount /media/RECOVERY
+                        exit 0
                 fi
                 mender commit
                 if [ ! $(echo $?) -eq 0 ]; then
                         echo "Commiting update failed. Aborting."
-                        exit_function
+                        cp /var/log/usb-mount.log /media/RECOVERY/system/
+                        umount /media/RECOVERY
+                        exit 0
                 fi
                 echo "Update done."
 
@@ -94,7 +102,6 @@ if [ $(jq -r .performUpdate /media/RECOVERY/system/recovery-settings.json) = "ye
                 if [ $(jq -r .autoReboot /media/RECOVERY/system/recovery-settings.json) = "yes" ]; then
                         echo "Rebooting..."
                         cp /var/log/usb-mount.log /media/RECOVERY/system/
-                        sed -i 's/yes/no/g' /media/RECOVERY/system/recovery-settings.json
                         umount /media/RECOVERY
                         reboot
                 else
@@ -109,4 +116,6 @@ fi
 
 
 echo "End of recovery."
-exit_function
+cp /var/log/usb-mount.log /media/RECOVERY/system/
+umount /media/RECOVERY
+exit 0
