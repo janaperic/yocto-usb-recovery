@@ -34,4 +34,11 @@ Example of recovery-settings.json
   "enableSSH": "no"
 }
 ```
+## Security
+To make the system more secure, instead of using plain json file for recovery-settings.json, system will expect signed file - recovery-settings.json.signed. To sign the file, use the private key (private.pem) from this folder, and sign it via following command: <br />
+`openssl rsautl -sign -inkey /path/to/private.pem -out recovery-settings.json.signed -in recovery-settings.json`
 
+OpenSSL will now require to type in the key password.
+After signing the file, copy recovery-settings.json.signed to the USB drive, in the system/ directory.
+
+#### NOTE! Recovery won't work if recovery-settings.json is present at the time of inserting the drive. Please make sure to remove recovery-settings.json if it was generated during previous usage. 
