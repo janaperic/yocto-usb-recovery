@@ -39,6 +39,6 @@ To make the system more secure, instead of using plain json file for recovery-se
 `openssl rsautl -sign -inkey /path/to/private.pem -out recovery-settings.json.signed -in recovery-settings.json`
 
 OpenSSL will now require to type in the key password.
-After signing the file, copy recovery-settings.json.signed to the USB drive, in the system/ direcotry.
+After signing the file, copy recovery-settings.json.signed to the USB drive, in the system/ directory.
 
 #### NOTE! Recovery won't work if recovery-settings.json is present at the time of inserting the drive. Please make sure to remove recovery-settings.json if it was generated during previous usage. 
