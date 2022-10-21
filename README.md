@@ -30,8 +30,7 @@ Example of recovery-settings.json
   "performUpdate": "yes",
   "updateFile": "/media/RECOVERY/system/update.mender",
   "autoReboot": "yes",
-  "disableSSH": "no",
-  "enableSSH": "no"
+  "enableSSH": "true"
 }
 ```
 ## Security
